@@ -1,0 +1,11 @@
+{
+  "launch": {
+    "editor.autoCloseBrackets": false,
+    "editor.suggestOnTriggerCharacter": false
+  },
+  "editor.codeActionsOnSave": {
+  },
+  "html.autoClosingTags": false,
+  "javascript.autoClosingTags": false,
+  "typescript.autoClosingTags": false
+}
