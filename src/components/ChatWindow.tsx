@@ -33,9 +33,8 @@ function ChatWindow() {
     // 1. Show user message
     setMessages((prevMessages) => [...prevMessages, { sender: "user", text: message }]);
 
-    // 2. Optionally send to backend (you can add this later) 
-    // the route is /chat
-    fetch("http://localhost:5000/message", { 
+    // 2. Optionally send to backend (you can add this later)
+    fetch("https://trafficchatter.onrender.com", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message }),
