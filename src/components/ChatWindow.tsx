@@ -29,24 +29,31 @@ function ChatWindow() {
     { sender: "bot", text: "Welcome to the chat!" },
   ]);
 
-  const handleSendMessage = (message: string) => {
+  const handleSendMessage = (user_input: string) => {
     // 1. Show user message
-    setMessages((prevMessages) => [...prevMessages, { sender: "user", text: message }]);
+    setMessages((prevMessages) => [...prevMessages, { sender: "user", text: user_input }]);
 
     // 2. Optionally send to backend (you can add this later)
-    fetch("https://trafficchatter.onrender.com", {
+    fetch("https://trafficchatter.onrender.com/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message }),
+      body: JSON.stringify({ user_input }),
     })
       .then(res => res.json())
       .then(data => {
-        if (data.reply) {
-          setMessages(prev => [...prev, { sender: "bot", text: data.reply }]);
-        }
+      // Format the backend response for display
+      let botMessage = `Distance: ${data.distance}\nDuration: ${data.duration}\nDuration in traffic: ${data.duration_in_traffic}\nTraffic severity: ${data.traffic_severity}\n\nRoutes:\n`;
+      data.routes.forEach((route: any, idx: number) => {
+        botMessage += `\nRoute ${idx + 1} (${route.summary}):\n`;
+        botMessage += `- Distance: ${route.distance}\n- Duration: ${route.duration}\n- Steps:\n`;
+        route.steps.forEach((step: string, stepIdx: number) => {
+        botMessage += `  ${stepIdx + 1}. ${step}\n`;
+        });
+      });
+      setMessages(prev => [...prev, { sender: "bot", text: botMessage }]);
       })
       .catch(err => console.error("Backend error:", err));
-  };
+    };
 
   return (
     <>

@@ -1,24 +1,25 @@
 import { useState } from "react";
 
-function InputBox({ onSend }: { onSend: (message: string) => void }) {
-  const [message, setMessage] = useState("");
+function InputBox({ onSend }: { onSend: (user_input: string) => void }) {
+  const [user_input, setMessage] = useState("");
 
   const handleSend = () => {
-    if (message.trim() === "") return; // don’t send empty messages
-    onSend(message);
+    if (user_input.trim() === "") return; // don’t send empty messages
+    onSend(user_input);
     setMessage(""); // clear input after sending
   };
 
   return (
     <div className="flex p-2">
-      <input
-      type="text"
-      value={message}
+      <textarea
+      value={user_input}
       onChange={(e) => setMessage(e.target.value)}
       placeholder="Type your message"
-      className="flex-grow border rounded px-3 py-2 text-black"
+      className="flex-grow border rounded px-3 py-2 text-black resize-none"
+      rows={3}
       onKeyDown={(e) => {
-        if (e.key === "Enter") {
+        if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
         handleSend();
         }
       }}
