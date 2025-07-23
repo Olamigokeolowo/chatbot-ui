@@ -41,15 +41,35 @@ function ChatWindow() {
     })
       .then(res => res.json())
       .then(data => {
-      // Format the backend response for display
-      let botMessage = `Distance: ${data.distance}\nDuration: ${data.duration}\nDuration in traffic: ${data.duration_in_traffic}\nTraffic severity: ${data.traffic_severity}\n\nRoutes:\n`;
-      data.routes.forEach((route: any, idx: number) => {
-        botMessage += `\nRoute ${idx + 1} (${route.summary}):\n`;
-        botMessage += `- Distance: ${route.distance}\n- Duration: ${route.duration}\n- Steps:\n`;
-        route.steps.forEach((step: string, stepIdx: number) => {
-        botMessage += `  ${stepIdx + 1}. ${step}\n`;
-        });
-      });
+      // Prepare a JSX element for the bot message
+      const botMessage = (
+        <div>
+        <div className="mb-2">
+          <strong>Distance:</strong> {data.distance}<br />
+          <strong>Duration:</strong> {data.duration}<br />
+          <strong>Duration in traffic:</strong> {data.duration_in_traffic}<br />
+          <strong>Traffic severity:</strong> {data.traffic_severity}
+        </div>
+        <div>
+          <strong>Routes:</strong>
+          {data.routes.map((route: any, idx: number) => (
+          <div key={idx} className="mt-2 p-2 border rounded bg-gray-100 text-black">
+            <div className="font-semibold">Route {idx + 1}: {route.summary}</div>
+            <div>- <strong>Distance:</strong> {route.distance}</div>
+            <div>- <strong>Duration:</strong> {route.duration}</div>
+            <div className="ml-2">
+            <strong>Steps:</strong>
+            <ol className="list-decimal ml-6">
+              {route.steps.map((step: string, stepIdx: number) => (
+              <li key={stepIdx}>{step}</li>
+              ))}
+            </ol>
+            </div>
+          </div>
+          ))}
+        </div>
+        </div>
+      );
       setMessages(prev => [...prev, { sender: "bot", text: botMessage }]);
       })
       .catch(err => console.error("Backend error:", err));
