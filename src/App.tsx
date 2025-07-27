@@ -6,7 +6,7 @@ function App() {
   return (
   <div>
     <ChatWindow />
-    <ChatBot/>
+    {/* <ChatBot/> */}
   </div>
 )
 }

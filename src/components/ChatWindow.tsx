@@ -38,10 +38,10 @@ function requestUserLocation(callback?: () => void) {
 }
 
 // Interfaces
-interface Location {
-  lat?: number;
-  lng?: number;
-}
+// interface Location {
+//   lat?: number;
+//   lng?: number;
+// }
 
 interface ChatPayload {
   user_input: string;
@@ -62,10 +62,7 @@ function ChatWindow() {
     const existing = localStorage.getItem("session_id");
     if (!existing) generateSessionId();
   }, []);
-  const [showPopup, setShowPopup] = useState(true); // Ask for location on load
-  const [messages, setMessages] = useState<
-    { sender: "bot" | "user"; text: string }[]
-  >([{ sender: "bot", text: "Welcome to the chat!" }]);
+  // (Removed duplicate state declarations)
 
   const handleSendMessage = (user_input: string) => {
     const session_id =
@@ -73,7 +70,7 @@ function ChatWindow() {
     const { lat, lng } = getStoredLocation();
 
     // 1. Show user message
-    setMessages((prev) => [...prev, { sender: "user", text: user_input }]);
+    // setMessages((prev) => [...prev, { sender: "user", text: user_input }]);
     setMessages((prevMessages) => [
       ...prevMessages,
       { sender: "user", text: user_input },
@@ -88,12 +85,12 @@ function ChatWindow() {
     };
 
     // 3. Send to backend
-    fetch("http://localhost:5000/chat", {
+    fetch("https://trafficchatter.onrender.com/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     })
-      .then((res) => res.json())
+      .then((res: Response) => res.json())
       .then((data) => {
         let botMessage = "";
 
@@ -132,28 +129,7 @@ function ChatWindow() {
         ]);
       });
   };
-      .then((res) => res.json())
-      .then((data) => {
-        // Format the backend response for display
-        let botMessage = `🗺️ Route Overview\n\n📏 Distance: ${data.distance}\n🕒 Duration: ${data.duration}\n🚦 Duration in Traffic: ${data.duration_in_traffic}\n📊 Traffic Severity: ${data.traffic_severity}\n\n📍 Available Routes:\n`;
-
-        data.routes.forEach((route: any, idx: number) => {
-          botMessage += `\n🔹 **Route ${idx + 1}: ${route.summary}**\n`;
-          botMessage += `   - Distance: ${route.distance}\n`;
-          botMessage += `   - Duration: ${route.duration}\n`;
-          botMessage += `   -  Steps:\n`;
-
-          route.steps.forEach((step: string, stepIdx: number) => {
-            botMessage += `     ${stepIdx + 1}. ${step}\n`;
-          });
-        });
-
-        setMessages((prev) => [...prev, { sender: "bot", text: botMessage }]);
-
-        setMessages((prev) => [...prev, { sender: "bot", text: botMessage }]);
-      })
-      .catch((err) => console.error("Backend error:", err));
-  };
+  // (Remove the misplaced .then block and duplicate setMessages call)
 
   return (
     <>
@@ -162,9 +138,6 @@ function ChatWindow() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white text-black p-6 rounded-lg shadow-lg w-96">
             <h2 className="text-xl font-bold mb-4">Allow Location Access?</h2>
-            <p className="mb-4">
-              We use your location to help with traffic info.
-            </p>
             <p className="mb-4">
               We use your location to help with traffic info.
             </p>
