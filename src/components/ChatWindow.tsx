@@ -25,13 +25,16 @@ function getUserLocation() {
 
 function ChatWindow() {
   const [showPopup, setShowPopup] = useState(true); // Ask for location on load
-  const [messages, setMessages] = useState<{ sender: "bot" | "user"; text: string }[]>([
-    { sender: "bot", text: "Welcome to the chat!" },
-  ]);
+  const [messages, setMessages] = useState<
+    { sender: "bot" | "user"; text: string }[]
+  >([{ sender: "bot", text: "Welcome to the chat!" }]);
 
   const handleSendMessage = (user_input: string) => {
     // 1. Show user message
-    setMessages((prevMessages) => [...prevMessages, { sender: "user", text: user_input }]);
+    setMessages((prevMessages) => [
+      ...prevMessages,
+      { sender: "user", text: user_input },
+    ]);
 
     // 2. Optionally send to backend (you can add this later)
     fetch("https://trafficchatter.onrender.com/chat", {
@@ -39,21 +42,28 @@ function ChatWindow() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ user_input }),
     })
-      .then(res => res.json())
-      .then(data => {
-      // Format the backend response for display
-      let botMessage = `Distance: ${data.distance}\nDuration: ${data.duration}\nDuration in traffic: ${data.duration_in_traffic}\nTraffic severity: ${data.traffic_severity}\n\nRoutes:\n`;
-      data.routes.forEach((route: any, idx: number) => {
-        botMessage += `\nRoute ${idx + 1} (${route.summary}):\n`;
-        botMessage += `- Distance: ${route.distance}\n- Duration: ${route.duration}\n- Steps:\n`;
-        route.steps.forEach((step: string, stepIdx: number) => {
-        botMessage += `  ${stepIdx + 1}. ${step}\n`;
+      .then((res) => res.json())
+      .then((data) => {
+        // Format the backend response for display
+        let botMessage = `🗺️ Route Overview\n\n📏 Distance: ${data.distance}\n🕒 Duration: ${data.duration}\n🚦 Duration in Traffic: ${data.duration_in_traffic}\n📊 Traffic Severity: ${data.traffic_severity}\n\n📍 Available Routes:\n`;
+
+        data.routes.forEach((route: any, idx: number) => {
+          botMessage += `\n🔹 **Route ${idx + 1}: ${route.summary}**\n`;
+          botMessage += `   - Distance: ${route.distance}\n`;
+          botMessage += `   - Duration: ${route.duration}\n`;
+          botMessage += `   -  Steps:\n`;
+
+          route.steps.forEach((step: string, stepIdx: number) => {
+            botMessage += `     ${stepIdx + 1}. ${step}\n`;
+          });
         });
-      });
-      setMessages(prev => [...prev, { sender: "bot", text: botMessage }]);
+
+        setMessages((prev) => [...prev, { sender: "bot", text: botMessage }]);
+
+        setMessages((prev) => [...prev, { sender: "bot", text: botMessage }]);
       })
-      .catch(err => console.error("Backend error:", err));
-    };
+      .catch((err) => console.error("Backend error:", err));
+  };
 
   return (
     <>
@@ -62,7 +72,9 @@ function ChatWindow() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white text-black p-6 rounded-lg shadow-lg w-96">
             <h2 className="text-xl font-bold mb-4">Allow Location Access?</h2>
-            <p className="mb-4">We use your location to help with traffic info.</p>
+            <p className="mb-4">
+              We use your location to help with traffic info.
+            </p>
             <div className="flex justify-end space-x-4">
               <button
                 className="px-4 py-2 bg-gray-400 text-white rounded"
