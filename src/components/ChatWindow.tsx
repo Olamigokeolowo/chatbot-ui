@@ -52,15 +52,21 @@ interface ChatPayload {
 
 // Main Component
 function ChatWindow() {
-  const [showPopup, setShowPopup] = useState(true);
+  const [showPopup, setShowPopup] = useState(false); // Start hidden
   const [messages, setMessages] = useState<
     { sender: "bot" | "user"; text: string }[]
   >([{ sender: "bot", text: "Welcome to the chat!" }]);
 
-  // Ensure session ID exists on load
+  // Delay popup on mount
   useEffect(() => {
     const existing = localStorage.getItem("session_id");
     if (!existing) generateSessionId();
+
+    const timer = setTimeout(() => {
+      setShowPopup(true);
+    }, 2000); // 2000ms = 2 seconds
+
+    return () => clearTimeout(timer);
   }, []);
   // (Removed duplicate state declarations)
 
