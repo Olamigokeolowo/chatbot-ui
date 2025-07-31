@@ -2,7 +2,7 @@
 function Sidebar () {
 
   return (
-    <div className="w-64 black text-white p-4 flex flex-col justify-between rounded-r-ig shadow-lg">
+    <div className="w-64 black text-white p-4 flex flex-col justify-between rounded-r-ig shadow-lg ">
       {/* Sidebar content like menu or icons */}
       <div>
         <h2 className="text-lg font-semibold mb-6">ChatBot UI</h2>
