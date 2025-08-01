@@ -1,7 +1,7 @@
 import MessageBubble from "./MessageBubble";
 import InputBox from "./InputBox";
 import Sidebar from "./Sidebar";
-import TypingIndicator from "./TypingIndicator"; 
+import TypingIndicator from "./TypingIndicator";
 import { useState, useEffect } from "react";
 
 // Utils
@@ -52,16 +52,30 @@ function ChatWindow() {
   >([{ sender: "bot", text: "Welcome to the chat!" }]);
   const [showTyping, setShowTyping] = useState(false);
 
+  // ✅ Show popup only once per session
   useEffect(() => {
     const existing = localStorage.getItem("session_id");
     if (!existing) generateSessionId();
 
-    const timer = setTimeout(() => {
-      setShowPopup(true);
-    }, 2000);
-
-    return () => clearTimeout(timer);
+    const popupAnswered = sessionStorage.getItem("location_popup_answered");
+    if (!popupAnswered) {
+      const timer = setTimeout(() => {
+        setShowPopup(true);
+      }, 2000); // Show popup after 2s
+      return () => clearTimeout(timer);
+    }
   }, []);
+
+  const handleLocationPermission = (granted: boolean) => {
+    // Mark popup as answered for this session
+    sessionStorage.setItem("location_popup_answered", "true");
+
+    if (granted) {
+      requestUserLocation(() => setShowPopup(false));
+    } else {
+      setShowPopup(false);
+    }
+  };
 
   const handleSendMessage = (user_input: string) => {
     const session_id =
@@ -130,8 +144,8 @@ function ChatWindow() {
   return (
     <>
       {showPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white text-black p-6 rounded-lg shadow-lg w-96">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity duration-300">
+          <div className="bg-white text-black p-6 rounded-lg shadow-lg w-96 animate-fade-in">
             <h2 className="text-xl font-bold mb-4">Allow Location Access?</h2>
             <p className="mb-4">
               We use your location to help with traffic info.
@@ -139,15 +153,13 @@ function ChatWindow() {
             <div className="flex justify-end space-x-4">
               <button
                 className="px-4 py-2 bg-gray-400 text-white rounded"
-                onClick={() => setShowPopup(false)}
+                onClick={() => handleLocationPermission(false)}
               >
                 Deny
               </button>
               <button
                 className="px-4 py-2 bg-blue-600 text-white rounded"
-                onClick={() => {
-                  requestUserLocation(() => setShowPopup(false));
-                }}
+                onClick={() => handleLocationPermission(true)}
               >
                 Allow
               </button>
