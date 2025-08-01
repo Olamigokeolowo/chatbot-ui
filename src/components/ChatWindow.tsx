@@ -1,6 +1,7 @@
 import MessageBubble from "./MessageBubble";
 import InputBox from "./InputBox";
 import Sidebar from "./Sidebar";
+import TypingIndicator from "./TypingIndicator"; 
 import { useState, useEffect } from "react";
 
 // Utils
@@ -37,12 +38,6 @@ function requestUserLocation(callback?: () => void) {
   }
 }
 
-// Interfaces
-// interface Location {
-//   lat?: number;
-//   lng?: number;
-// }
-
 interface ChatPayload {
   user_input: string;
   session_id: string;
@@ -50,39 +45,36 @@ interface ChatPayload {
   lng?: number;
 }
 
-// Main Component
 function ChatWindow() {
-  const [showPopup, setShowPopup] = useState(false); // Start hidden
+  const [showPopup, setShowPopup] = useState(false);
   const [messages, setMessages] = useState<
     { sender: "bot" | "user"; text: string }[]
   >([{ sender: "bot", text: "Welcome to the chat!" }]);
+  const [showTyping, setShowTyping] = useState(false);
 
-  // Delay popup on mount
   useEffect(() => {
     const existing = localStorage.getItem("session_id");
     if (!existing) generateSessionId();
 
     const timer = setTimeout(() => {
       setShowPopup(true);
-    }, 2000); // 2000ms = 2 seconds
+    }, 2000);
 
     return () => clearTimeout(timer);
   }, []);
-  // (Removed duplicate state declarations)
 
   const handleSendMessage = (user_input: string) => {
     const session_id =
       localStorage.getItem("session_id") || generateSessionId();
     const { lat, lng } = getStoredLocation();
 
-    // 1. Show user message
-    // setMessages((prev) => [...prev, { sender: "user", text: user_input }]);
     setMessages((prevMessages) => [
       ...prevMessages,
       { sender: "user", text: user_input },
     ]);
 
-    // 2. Construct payload
+    setShowTyping(true); // Show typing animation
+
     const payload: ChatPayload = {
       user_input,
       session_id,
@@ -90,7 +82,6 @@ function ChatWindow() {
       lng,
     };
 
-    // 3. Send to backend
     fetch("https://trafficchatter.onrender.com/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -101,13 +92,12 @@ function ChatWindow() {
         let botMessage = "";
 
         if (data.routes?.length) {
-          botMessage += `Distance: ${data.distance}\nDuration: ${data.duration}\n`;
-          botMessage += `Duration in traffic: ${data.duration_in_traffic}\n`;
-          botMessage += `Traffic severity: ${data.traffic_severity}\n\nRoutes:\n`;
+          botMessage += `🚣️ *Here are your route details:*\n`;
+          botMessage += `📏 Distance: ${data.distance}\n🕒 Duration: ${data.duration}\n🚦 In traffic: ${data.duration_in_traffic}\n📊 Severity: ${data.traffic_severity}\n`;
 
           data.routes.forEach((route: any, idx: number) => {
-            botMessage += `\nRoute ${idx + 1} (${route.summary}):\n`;
-            botMessage += `- Distance: ${route.distance}\n- Duration: ${route.duration}\n- Steps:\n`;
+            botMessage += `\n📍 Route ${idx + 1}: ${route.summary}\n`;
+            botMessage += `- Distance: ${route.distance}\n- Duration: ${route.duration}\n- 🧭 Steps:\n`;
             route.steps.forEach((step: string, stepIdx: number) => {
               botMessage += `  ${stepIdx + 1}. ${step}\n`;
             });
@@ -120,26 +110,25 @@ function ChatWindow() {
           botMessage = "Hmm... I couldn't understand that.";
         }
 
-        // Update session_id if changed
         if (data.session_id) {
           localStorage.setItem("session_id", data.session_id);
         }
 
+        setShowTyping(false); // Hide typing animation
         setMessages((prev) => [...prev, { sender: "bot", text: botMessage }]);
       })
       .catch((err) => {
         console.error("Error talking to bot:", err);
+        setShowTyping(false);
         setMessages((prev) => [
           ...prev,
           { sender: "bot", text: "Oops! Something went wrong." },
         ]);
       });
   };
-  // (Remove the misplaced .then block and duplicate setMessages call)
 
   return (
     <>
-      {/* 📍 Location Prompt */}
       {showPopup && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white text-black p-6 rounded-lg shadow-lg w-96">
@@ -167,7 +156,6 @@ function ChatWindow() {
         </div>
       )}
 
-      {/* 💬 Chat Layout */}
       <div className="flex h-screen bg-gray-900 text-white">
         <Sidebar />
         <div className="flex flex-col flex-grow bg-white text-black rounded-lg m-4 p-4 shadow-lg">
@@ -175,6 +163,11 @@ function ChatWindow() {
             {messages.map((msg, index) => (
               <MessageBubble key={index} sender={msg.sender} text={msg.text} />
             ))}
+            {showTyping && (
+              <div className="flex justify-start">
+                <TypingIndicator />
+              </div>
+            )}
           </div>
           <InputBox onSend={handleSendMessage} />
         </div>
