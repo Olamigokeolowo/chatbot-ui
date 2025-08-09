@@ -5,7 +5,7 @@ import user_avatar from "../images/user-avatar.png";
 interface MessageBubbleProps {
   sender: "bot" | "user";
   text: string;
-  time: string; // ✅ Added timestamp prop
+  time: string;
 }
 
 export default function MessageBubble({ sender, text, time }: MessageBubbleProps) {
@@ -13,7 +13,7 @@ export default function MessageBubble({ sender, text, time }: MessageBubbleProps
 
   return (
     <div
-      className={`flex items-end mb-3 ${
+      className={`flex items-end mb-3 px-1 sm:px-0 ${
         isBot ? "justify-start" : "justify-end"
       }`}
     >
@@ -22,21 +22,31 @@ export default function MessageBubble({ sender, text, time }: MessageBubbleProps
         <img
           src={bot_avatar}
           alt="Bot"
-          className="w-8 h-8 rounded-full mr-2 shadow-md"
+          className="w-7 h-7 sm:w-8 sm:h-8 rounded-full mr-2 shadow-md flex-shrink-0"
         />
       )}
 
       {/* Message bubble */}
       <div
-        className={`max-w-[75%] p-3 rounded-2xl text-sm leading-relaxed whitespace-pre-line shadow-md flex flex-col ${
-          isBot
+        className={`p-2 sm:p-3 rounded-2xl text-xs sm:text-sm leading-relaxed whitespace-pre-line shadow-md flex flex-col
+          max-w-[85%] sm:max-w-[75%]
+          ${isBot
             ? "bg-gray-200 text-black rounded-bl-none"
             : "bg-blue-600 text-white rounded-br-none"
-        }`}
+          }`}
       >
-        <span>{text}</span>
-        {/* ✅ Timestamp below the message */}
-        <span className="text-xs text-gray-500 mt-1 self-end">{time}</span>
+        <span className="break-words">{text}</span>
+
+        {/* Timestamp - responsive color & size */}
+        <span
+          className={`text-[0.65rem] sm:text-xs mt-1 self-end italic ${
+            isBot
+              ? "text-gray-500"
+              : "text-yellow-300 font-medium drop-shadow-sm"
+          }`}
+        >
+          {time}
+        </span>
       </div>
 
       {/* User icon (right) */}
@@ -44,7 +54,7 @@ export default function MessageBubble({ sender, text, time }: MessageBubbleProps
         <img
           src={user_avatar}
           alt="User"
-          className="w-8 h-8 rounded-full ml-2 shadow-md"
+          className="w-7 h-7 sm:w-8 sm:h-8 rounded-full ml-2 shadow-md flex-shrink-0"
         />
       )}
     </div>
