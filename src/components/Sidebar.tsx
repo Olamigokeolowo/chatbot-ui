@@ -1,9 +1,27 @@
+import { useEffect, useState } from "react";
+
 interface SidebarProps {
   username: string;
   onNewChat: () => void;
 }
 
+interface UsageStats {
+  active_sessions: number;
+  total_conversations: number;
+  sessions: Record<string, number>;
+}
+
 function Sidebar({ username, onNewChat }: SidebarProps) {
+  const [usage, setUsage] = useState<UsageStats | null>(null);
+
+  // ✅ Fetch usage stats from backend when Sidebar mounts
+  useEffect(() => {
+    fetch("https://trafficchatter.onrender.com/chat") // change to your server URL if deployed
+      .then((res) => res.json())
+      .then((data) => setUsage(data))
+      .catch((err) => console.error("Failed to load usage stats:", err));
+  }, []);
+
   const handleNewChatClick = () => {
     if (
       window.confirm(
@@ -60,10 +78,26 @@ function Sidebar({ username, onNewChat }: SidebarProps) {
         </button>
 
         {/* User Info */}
-        <div className="bg-white text-black rounded-lg p-2 sm:p-3 text-sm sm:text-base">
+        <div className="bg-white text-black rounded-lg p-2 sm:p-3 text-sm sm:text-base mb-3">
           <p className="text-xs sm:text-sm">Welcome back,</p>
           <p className="font-bold truncate">{username || "Guest"}</p>
         </div>
+
+        {/* ✅ Usage Stats */}
+        {usage && (
+          <div className="bg-gray-900 text-white rounded-lg p-3 text-xs sm:text-sm shadow-md">
+            <p className="font-bold mb-1">📊 Usage Stats</p>
+            <p>Active Sessions: {usage.active_sessions}</p>
+            <p>Total Conversations: {usage.total_conversations}</p>
+            <div className="mt-2 max-h-20 overflow-y-auto">
+              {Object.entries(usage.sessions).map(([sid, count]) => (
+                <p key={sid} className="truncate">
+                  Session {sid}: {count} msgs
+                </p>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

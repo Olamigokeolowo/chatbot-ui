@@ -4,6 +4,12 @@ import InputBox from "./InputBox";
 import Sidebar from "./Sidebar";
 import TypingIndicator from "./TypingIndicator";
 
+// 🔹 CHANGE: Polyfill `process` if missing
+if (typeof process === "undefined") {
+  // @ts-ignore
+  window.process = { env: {} };
+}
+
 // ✅ Utility: generate session ID
 function generateSessionId(): string {
   const id = `sess-${Date.now()}`;
@@ -55,7 +61,10 @@ function ChatWindow() {
     {
       sender: "bot",
       text: "Welcome to the chat!",
-      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      time: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
     },
   ]);
 
@@ -115,16 +124,29 @@ function ChatWindow() {
   };
 
   const handleSendMessage = (user_input: string) => {
-    const session_id = localStorage.getItem("session_id") || generateSessionId();
+    const session_id =
+      localStorage.getItem("session_id") || generateSessionId();
     const { lat, lng } = getStoredLocation();
-    const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    const time = new Date().toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
 
-    setMessages((prevMessages) => [...prevMessages, { sender: "user", text: user_input, time }]);
+    setMessages((prevMessages) => [
+      ...prevMessages,
+      { sender: "user", text: user_input, time },
+    ]);
     setShowTyping(true);
 
     const payload: ChatPayload = { user_input, session_id, lat, lng };
 
-    fetch("https://trafficchatter.onrender.com/chat", {
+    // 🔹 CHANGE: Use environment variable for API URL
+    const API_URL =
+      process.env.REACT_APP_API_URL ||
+      process.env.VITE_API_URL ||
+      "https://trafficchatter.onrender.com/chat";
+
+    fetch(API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -163,13 +185,30 @@ function ChatWindow() {
         }
 
         setShowTyping(false);
-        setMessages((prev) => [...prev, { sender: "bot", text: botMessage, time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) }]);
+        setMessages((prev) => [
+          ...prev,
+          {
+            sender: "bot",
+            text: botMessage,
+            time: new Date().toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+          },
+        ]);
       })
       .catch(() => {
         setShowTyping(false);
         setMessages((prev) => [
           ...prev,
-          { sender: "bot", text: "Oops! Something went wrong.", time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) },
+          {
+            sender: "bot",
+            text: "Oops! Something went wrong.",
+            time: new Date().toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+          },
         ]);
       });
   };
@@ -181,7 +220,16 @@ function ChatWindow() {
     sessionStorage.removeItem("location_popup_answered");
 
     const newSession = generateSessionId();
-    setMessages([{ sender: "bot", text: "Welcome to the chat!", time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) }]);
+    setMessages([
+      {
+        sender: "bot",
+        text: "Welcome to the chat!",
+        time: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      },
+    ]);
 
     const name = prompt("What's your name?") || "Guest";
     sessionStorage.setItem("username", name);
@@ -196,10 +244,22 @@ function ChatWindow() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity duration-300">
           <div className="bg-white text-black p-6 rounded-lg shadow-lg w-11/12 sm:w-96 animate-fade-in">
             <h2 className="text-xl font-bold mb-4">Allow Location Access?</h2>
-            <p className="mb-4">We use your location to help with traffic info.</p>
+            <p className="mb-4">
+              We use your location to help with traffic info.
+            </p>
             <div className="flex justify-end space-x-4">
-              <button className="px-4 py-2 bg-gray-400 text-white rounded" onClick={() => handleLocationPermission(false)}>Deny</button>
-              <button className="px-4 py-2 bg-blue-600 text-white rounded" onClick={() => handleLocationPermission(true)}>Allow</button>
+              <button
+                className="px-4 py-2 bg-gray-400 text-white rounded"
+                onClick={() => handleLocationPermission(false)}
+              >
+                Deny
+              </button>
+              <button
+                className="px-4 py-2 bg-blue-600 text-white rounded"
+                onClick={() => handleLocationPermission(true)}
+              >
+                Allow
+              </button>
             </div>
           </div>
         </div>
@@ -214,9 +274,18 @@ function ChatWindow() {
         {/* Chat area */}
         <div className="flex flex-col flex-grow bg-white text-black rounded-lg sm:m-4 p-4 shadow-lg max-h-screen">
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto space-y-3 relative" ref={chatContainerRef} onScroll={handleScroll}>
+          <div
+            className="flex-1 overflow-y-auto space-y-3 relative"
+            ref={chatContainerRef}
+            onScroll={handleScroll}
+          >
             {messages.map((msg, index) => (
-              <MessageBubble key={index} sender={msg.sender} text={msg.text} time={msg.time} />
+              <MessageBubble
+                key={index}
+                sender={msg.sender}
+                text={msg.text}
+                time={msg.time}
+              />
             ))}
             {showTyping && (
               <div className="flex justify-start">
@@ -236,8 +305,19 @@ function ChatWindow() {
                 }}
                 className="p-2 rounded-full bg-gray-200 shadow hover:bg-gray-300 transition"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6 text-gray-700"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
                 </svg>
               </button>
             </div>
